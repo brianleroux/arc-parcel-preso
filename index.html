@@ -1,0 +1,475 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" href=https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/reveal.min.css>
+<link rel="stylesheet" href=https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/css/theme/white.css>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+<script src=https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.min.js></script>
+<script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js></script>
+<script src=https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/highlight/highlight.js></script>
+<script src=https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/plugin/notes/notes.js></script>
+</head>
+<body>
+<div class=reveal>
+<div class=slides>
+
+
+				<section data-transition="fade-in zoom-out">
+          <p>
+          &#x269B; React on Lambda with Parcel.js
+          </p>
+        </section>
+				<section data-transition="zoom-in zoom-out">
+          <p>
+          <strike> &#x269B; React on Lambda with Parcel.js</strike>
+          </p>
+        </section>
+				<section data-transition="fade-in slide-out">
+          <p>
+          &#x269B; Serverless Side Rendering (SSR) on AWS Lambda with React with ParcelJS, Rollup and using arc.codes
+          </p>
+        </section>
+				<section data-transition="slide-in slide-out">
+          <p>
+          &#x1f514;&#x1f514;&#x1f514; BUZZWORD BINGO
+          <ul style=list-style:none;>
+          <li class=fragment>&#9989; SSR</li>
+          <li class=fragment>&#9989; Lambda</li>
+          <li class=fragment>&#9989; React</li>
+          <li class=fragment>&#9989; ParcelJS</li>
+          <li class=fragment>&#9989; Rollup</li>
+          <li class=fragment>&#9989; <a href=https://arc.codes>arc.codes</a></li>
+          </ul>
+          </p>
+        </section>
+
+        <section>
+          <small>
+            An elliptical narrative about web servers pre-rendering html content and how to use lambda functions for pre-rendering html content.
+          </small>
+        </section>
+
+        <section>
+          <h3>I had a</h3>
+          <h1>REALLY BIG</h1>
+          <h3>question</h3>
+        </section>
+
+				<section>
+          <blockquote style="border-left:50px solid grey; text-align:left;">
+            <h2 style="margin-left:20px;text-transform:none;">"Is it possible to pre-render html content without a web server?"</h2>
+            <a style=display:block;text-align:right href=https://brian.io target=blank>&mdash; @brianleroux</a>
+          </blockquote>
+        </section>
+
+				<section>
+          <h3>Prerendering</h3>
+          <ul style=list-style:none;>
+            <li><b>Why</b> do it? 
+              <li><i>How</i> to do it?
+          </ul>
+        </section>
+
+        <section><strong>Mostly performance...</strong></section>
+
+        <section>
+          <h4>Authortime performance</h4>
+          <small>Reuse templates between the client and the server!</small>
+        </section>
+
+        <section>
+          <h4>Runtime performance</h4>
+          <small>Things just work immediately even without javascript enabled!</small>
+        </section>
+
+        <section>
+          <h4>Perceived performance</h4>
+          <small>ttfb vs tti</small>
+        </section>
+
+        <section>
+          <h4>Some devices do not have javascript enabled</h4>
+          <ul style=list-style:none;>
+            <li class=fragment>&#x261E; eReaders</li>
+            <li class=fragment>&#x261E; Low end phones</li>
+            <li class=fragment>&#x261E; Screenreaders</li>
+          </ul>
+        </section>
+
+        <section>
+          <h1>Accessibility should always be the strongest reason!</h1>
+        </section>
+
+        <section><h2>Rendering a Client with React and ParcelJS</h2></section>
+
+        <section data-transition="slide-in fade-out">
+          <h4>Super basic client entry file</h4>
+          <pre class=lang-javascript><code data-trim data-noescape class=lang-javascript>// src/views/client.js
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+import './app.css'
+import App from './app'
+
+let app = <App path={window.location.pathname} state={window.initialState} />
+let root = document.getElementById('root')
+
+ReactDOM.hydrate(app, root)</code></pre>
+</section>
+        <section data-transition="fade-in slide-out">
+          <h4>Super basic client entry file</h4>
+          <pre class=lang-javascript><code data-trim data-noescape class=lang-javascript>// src/views/client.js
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+import './app.css'
+import App from './app'
+
+let app = <App path={window.location.pathname} state={window.initialState} />
+let root = document.getElementById('root')
+
+<mark>ReactDOM.hydrate(app, root)</mark></code></pre>
+</section>
+
+
+        <section>One Weird Trick #1</section>
+
+        <section data-transition="slide-in fade-out">
+          <h4>Serverside render function</h4>
+          <img style=border:none;box-shadow:none; width=500px src=render-function.png />
+        </section>
+
+<section>
+React JSX syntax needs to be transpiled 
+</section>
+
+<section>
+Best to deliberately limit transpiled surface into one function
+</section>
+
+<section>
+Limit transpile time by only transpiling code that absolutely needs it
+</section>
+
+<section>
+Faster debugging resolution time
+</section>
+
+<section>
+Another benefit is now any web server works
+</section>
+
+        <section data-transition="slide-in fade-out">
+          <h4>Serverside render function</h4>
+          <pre class=lang-javascript><code data-trim data-no-escape class=lang-javascript>let render = require('./src/views')
+let express = require('express')
+let app = express()
+
+app.get('*', (req, res) => {
+  let html = render({path:req.path, state:{}}) 
+  res.send(html)
+})
+</code></pre>
+</section>
+        <section data-transition="fade-in fade-out">
+          <h4>Serverside render function</h4>
+          <pre class=lang-javascript><code data-trim data-no-escape class=lang-javascript><mark>let render = require('./src/views')</mark>
+let express = require('express')
+let app = express()
+
+app.get('*', (req, res) => {
+  let html = render({path:req.path, state:{}}) 
+  res.send(html)
+})
+</code></pre>
+</section>
+        <section data-transition="fade-in slide-out">
+          <h4>Serverside render function</h4>
+          <pre class=lang-javascript><code data-trim data-no-escape class=lang-javascript>let render = require('./src/views')
+let express = require('express')
+let app = express()
+
+app.get('*', (req, res) => {
+  <mark>let html = render({path:req.path, state:{}})</mark> 
+  res.send(html)
+})
+</code></pre>
+</section>
+
+<section>
+  <h1>This is a cringe worthy example!</h1>
+  <small><code>*</code> routes never happen in practice and probably shouldn't anyhow</small>
+</section>
+
+
+
+
+<section>
+<h3>But what happens when the servers all go away?</h3>
+<small>Billing is now measured in 100ms of compute and it is super cheap</small>
+</section>
+
+<section>
+<h3>But what happens when the servers all go away?</h3>
+<small>Provisioning is now measured in <b>minutes</b> not hours</small>
+</section>
+
+<section>
+<h3>But what happens when the servers all go away?</h3>
+<small>Deployments are now measured in <b>seconds</b> not minutes or hours</small>
+</section>
+
+<section>
+<h3>But what happens when the servers all go away?</h3>
+<small>Faster provisioning and deploys equals more iteration speed (lead time to production is lower than competitors)</small>
+</section>
+
+<section>
+<h3>Cloud Functions Vendors</h3>
+<p>
+<ul style=list-style:none;display:block:width:100%;>
+  <li>AWS Lambda</li>
+  <li>Azure Cloud Functions </li>
+  <li>Google Cloud Functions</li>
+</ul>
+</p>
+<small>Nearby: Stripe Runkit, Twilio Functions, Cloudflare Functions, Stdlib</small>
+</section>
+
+
+<section>
+  <h3>Power Laws</h3>
+  <small>Amazon not only pioneered this space but dominates it by multiples on all metrics: services, features, revenue, uptime, you-name-it</small>
+</section>
+<section>
+  <h3>Power Laws</h3>
+  <small>
+    <mark>Broad adoption is not lock-in! </mark>
+    At this point adoption <b>de-risking by opt-in</b>; newer hungrier competitors will get the advantages of speed to scale and pay-for-use even if you do not!
+  </small>
+</section>
+
+
+
+<section data-transition="slide-in fade-out">
+  <h3>Primitives over Frameworks</h3>
+  <p>
+  <ul style=list-style:none;display:block:width:100%;font-size:.7em>
+    <li>API gateway</li>
+    <li>Event gateway</li>
+    <li>Managed durable persistence</li>
+    <li>Blobstore and CDN</li>
+    <li>Logging, monitoring and analytics</li>
+  </ul>
+  </p>
+</section>
+<section data-transition="fade-in fade-out">
+  <h3>AWS primitives</h3>
+  <p>
+  <ul style=list-style:none;display:block:width:100%;font-size:.7em>
+    <li>HTTP handler Lambdas using Route53, and the literally named API Gateway</li>
+    <li>SNS and AWS IoT enable pub/sub and MQTT over Web Sockets respectively</li>
+    <li>DynamoDB + autoscaling: durable and predictable persistence</li>
+    <li>S3 + CloudFront</li>
+    <li>CloudWatch</li>
+  </ul>
+  </p>
+</section>
+<section data-transition="fade-in slide-out">
+  <h3>Primitives over Frameworks</h3>
+  <p>
+  <ul style=list-style:none;display:block:width:100%;font-size:.7em>
+    <li>API gateway</li>
+    <li>Event gateway</li>
+    <li>Managed durable persistence</li>
+    <li>Blobstore and CDN</li>
+    <li>Logging, monitoring and analytics</li>
+  </ul>
+  </p>
+</section>
+<section>
+  <small><mark>Lambda is the glue of AWS services!</mark> From DynamoDB streams to CloudWatch Events scheduled functions the capability continues to grow more and more sophisticated</small>
+</section>
+
+
+<section>
+  <h4>Functions as a Service</h4>
+  <small>ts about focusing on **app code** instead of maintaining infra; no more os upgrades, package management, security patches, orchestration tasks and load balancing</small>
+</section>
+
+
+<section>
+  <h4>Pure isolation</h4>
+  <small>Functions are faster to deploy, only use what they need so they start up faster and are far easier to reason about when debugging</small>
+</section>
+
+<section>
+  <h4>Peace of mind</h4>
+  <small>Your code scales transparently so you can focus on customer features and fixes with total confidence the infra side is taken care of</small>
+</section>
+
+
+<section>
+  <h3>Lets have a moment of silence and show our thanks to the servers</h3>
+  <small>Servers did a good job and taught us many important lessons</small>
+</section>
+
+<section>
+  <h3>Infrastructure as code</h3>
+  <small>Old school tools: Chef, Puppet, Ansible</small>
+</section>
+
+<section>
+  <h3>Architecture as Text</h3>
+  <p><small>New school tools: SAM, Serverless™, Terraform, <a href=https://arc.codes target=blank>JSF Architect</a></small></p>
+</section>
+
+<section>
+  <h2>JS Foundation Architect</h2>
+  <small>We mostly just call it "arc". The code was granted to the JSF in 2017 because we believe open governance is an important facet to open source</small>
+</section>
+<section>
+  <h2>JS Foundation Architect</h2>
+  <small>The "arc" name comes from the manifest file (<code>.arc</code>) which shamelessly copies the rc file convention of UNIX yore (like: .vimrc, .bashrc, etc) and stands for "Amazon Run Commands"</small>
+</section>
+<section>
+  <h2>JS Foundation Architect</h2>
+  <small><code>.arc</code> designed to address the problems with YAML and JSON as a manifest</small>
+</section>
+<section>
+  <h2>JS Foundation Architect</h2>
+  <small><code>.arc</code> uses project local npm scripts instead of global cli tools</small>
+</section>
+<section>
+  <h2>JS Foundation Architect</h2>
+  <small><code>.arc</code> is extremely fast; blazing even! ;)</small>
+</section>
+<section>
+  <h2>JS Foundation Architect</h2>
+  <small><code>.arc</code> is tuned for a higher level developer experience while maintaining a close relationship to the low level AWS primitives</small>
+</section>
+<section>
+  <h2>JS Foundation Architect</h2>
+  <small>Extracted from <a href=https://begin.com>begin.com</a> which is an web and Slack app for tasking</small>
+</section>
+
+
+<section>
+  <h3><code style=text-transform:none;>.arc</code> has three simple rules</h3>
+  <ol>
+  <li>Comments start with #
+  <li>Sections start with an @
+  <li>Everything else becomes AWS infrastructure
+  </ol>
+</section>
+
+				<section>a complete <code>.arc</code> example<pre><code class=bash data-trim>@app
+hello
+
+@html
+get /
+post /likes
+
+@json
+get /likes
+</code></pre>
+				</section>
+
+        <section>Lets look at the generated cloud function code</section>
+
+				<section><code>src/html/get-index/index.js</code><pre><code class=javascript data-trim>var arc = require('@architect/functions')
+
+function index(req, res) {
+  res({
+    html: '<blink>hello world</blink>'
+  })
+}
+
+exports.handler = arc.html.get(index)
+</code></pre>
+				</section>
+
+<section>
+ This local code represents four Lambda functions deployed to API Gateway
+
+- isolated routes seems weird but its actually really great
+- @html lambdas are served as `text/html`
+- @json lambdas are served as `application/json`
+</section>
+
+<section>
+Other arc tidbits
+
+- first class support for isolated `staging` and `production` envs
+- session state is enabled by default
+- `npm start` runs the code locally
+</section>
+
+<section>
+As you can see .arc may be terse but it is powerful stuff. Lets get back to server(less) rendering!
+
+- HTTP lambdas need to run a copy of your clientside app in the lambda runtime to resolve an html string given a particular state
+</section>
+
+<section>
+Attempt #1
+`npm i react react-dom`
+- ultimately installs 10mb of node_modules slowing down lambda unacceptably
+</section><section>
+
+Attempt #2
+- rollup the render function into a single file module that accepts state and returns a dom string
+- worked beautifully!
+
+</section><section>
+
+Summary
+- build clientside assets with parcel because seriously y not
+- build clientside assets into a serverside function that accepts state and returns a string
+- rollup worked nicely once I threw the right combination of plugins at it
+- parcel and rollup both inherited .babelrc so that's neat
+
+</section><section>
+
+Conclusion
+- Prerendering html content is possible without servers too!
+
+</section>
+
+
+
+
+
+
+
+        <section><a href=https://arc.codes>arc.codes</a></section>
+<!--
+# demos
+
+0. authoring .arc file
+1. provisioning infra
+2. working offline
+3. deploying
+4. managing deps
+5. testing and ci
+6. logging and monitoring
+7. extending .arc
+8. open source project and foundation
+9. roadmap and 'get involved bit'
+
+-->
+			</div>
+		</div>
+		<script>
+    Reveal.initialize({
+    	showNotes: false,
+      slideNumber: true,
+      history: true,
+      progress: true,
+    })
+
+		hljs.initHighlightingOnLoad()
+
+		</script>
+	</body>
+</html>

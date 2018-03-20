@@ -1,0 +1,13 @@
+{
+  "name": "arc-parcel-preso",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "nodemon -e html --exec 'serve .'"
+  },
+  "author": "Brian LeRoux <b@brian.io>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "nodemon": "^1.17.2",
+    "serve": "^6.5.3"
+  }
+}
