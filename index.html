@@ -373,6 +373,7 @@ post /likes
 @json
 get /likes
 </code></pre>
+<small>The <code>.arc</code> above would generate three lambda functions: <code>src/html/get-index</code>, <code>src/html/post-likes</code> and <code>src/json/get-likes</code></small>
 				</section>
 
         <section>Lets look at the generated cloud function code</section>
@@ -390,59 +391,80 @@ exports.handler = arc.html.get(index)
 				</section>
 
 <section>
- This local code represents four Lambda functions deployed to API Gateway
+  Other <code>.arc</code> tidbits
+</section>
 
-- isolated routes seems weird but its actually really great
-- @html lambdas are served as `text/html`
-- @json lambdas are served as `application/json`
+<section>First class support for isolated <code>staging</code> and <code>production</code> envs</section>
+<section><code>npm start</code> runs the code locally</section>
+<section>Session state is enabled by default</section>
+
+<section>
+  <code>.arc</code> is deliberately constrained and terse
 </section>
 
 <section>
-Other arc tidbits
-
-- first class support for isolated `staging` and `production` envs
-- session state is enabled by default
-- `npm start` runs the code locally
+Lets get back to server(less) rendering!
 </section>
 
 <section>
-As you can see .arc may be terse but it is powerful stuff. Lets get back to server(less) rendering!
+HTTP lambdas need to run a copy of your clientside app in the lambda NodeJS runtime to resolve an html string given a particular state
+</section>
 
-- HTTP lambdas need to run a copy of your clientside app in the lambda runtime to resolve an html string given a particular state
+<section data-transition="slide-in fade-out">
+  <h2>Attempt #1</h2>
+  <pre><code>npm i react react-dom --save --production</code></pre>
+</section>
+<section data-transition="fade-in slide-out">
+  <h2><strike>Attempt #1</strike></h2>
+  Ultimately installs <code>10mb</code> of node_modules slowing down lambda unacceptably
 </section>
 
 <section>
-Attempt #1
-`npm i react react-dom`
-- ultimately installs 10mb of node_modules slowing down lambda unacceptably
-</section><section>
+  <h2>Attempt #2</h2>
+  <small>Rollup the render function into a single file module that accepts state and returns a dom string</small>
+</section>
+<section>
+  <h1>worked beautifully!</h1>
+</section>
 
-Attempt #2
-- rollup the render function into a single file module that accepts state and returns a dom string
-- worked beautifully!
+<section>
+  <h3>Summary</h3>
+  <small>Build clientside assets with parcel because seriously y not</small>
+</section>
+<section>
+  <h3>Summary</h3>
+  <small>uild clientside assets into a serverside function that accepts state and returns a string</small>
+</section>
+<section>
+  <h3>Summary</h3>
+  <small>Rollup worked nicely once I threw the right combination of plugins at it</small>
+</section>
+<section>
+  <h3>Summary</h3>
+  <small>Parcel and Rollup both inherited <code>.babelrc</code> so that is kind of neat</small>
+</section>
 
-</section><section>
-
-Summary
-- build clientside assets with parcel because seriously y not
-- build clientside assets into a serverside function that accepts state and returns a string
-- rollup worked nicely once I threw the right combination of plugins at it
-- parcel and rollup both inherited .babelrc so that's neat
-
-</section><section>
-
-Conclusion
-- Prerendering html content is possible without servers too!
-
+<section>
+  <h4>Conclusion</h4>
+  <h1>Pre-rendering html content is possible without servers too!</h1>
 </section>
 
 
 
-
-
-
-
-        <section><a href=https://arc.codes>arc.codes</a></section>
+        <section>
+          Thx!
+          <hr style="border:none; border-top:7px dotted #eaeaea">
+          <small style=display:block;text-transform:uppercase;text-align:left;color:#eaeaea>Source</small>
+          <a href=https://github.com/brianleroux/ target=blank>Code</a><br>
+          <hr style="border:none; border-top:7px dotted #eaeaea;">
+          <small style=display:block;text-transform:uppercase;text-align:left;color:#eaeaea>References</small>
+          <a href=https://arc.codes target=blank>arc.codes</a><br>
+          <a href=https://parceljs.org target=blank>parceljs.org</a><br>
+          <a href=https://rollupjs.org target=blank>rollupjs.org</a><br>
+          <hr style="border:none; border-top:7px dotted #eaeaea;">
+          <small style=display:block;text-transform:uppercase;text-align:left;color:#eaeaea>Author</small>
+          <a href=https://brian.io target=blank>brian.io</a><br>
+        </section>
 <!--
 # demos
 
