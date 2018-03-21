@@ -148,11 +148,7 @@ Limit transpile time by only transpiling code that absolutely needs it
 </section>
 
 <section>
-Faster debugging resolution time
-</section>
-
-<section>
-Another benefit is now any web server works
+Another benefit is now any web server (or Node runtime like Lambda) just works!
 </section>
 
         <section data-transition="slide-in fade-out">
@@ -202,7 +198,7 @@ app.get('*', (req, res) => {
 
 <section>
 <h3>But what happens when the servers all go away?</h3>
-<small>Billing is now measured in 100ms of compute and it is super cheap</small>
+<small>Billing is now measured in <b>milliseconds</b> of compute and it is super cheap</small>
 </section>
 
 <section>
@@ -219,14 +215,11 @@ app.get('*', (req, res) => {
 
 <section>
 <h3>Cloud Functions Vendors</h3>
-<p>
 <ul style=list-style:none;display:block:width:100%;>
   <li>AWS Lambda</li>
   <li>Azure Cloud Functions </li>
   <li>Google Cloud Functions</li>
 </ul>
-</p>
-<small>Nearby: Stripe Runkit, Twilio Functions, Cloudflare Functions, Stdlib</small>
 </section>
 
 
@@ -287,7 +280,7 @@ app.get('*', (req, res) => {
 
 <section>
   <h4>Functions as a Service</h4>
-  <small>ts about focusing on **app code** instead of maintaining infra; no more os upgrades, package management, security patches, orchestration tasks and load balancing</small>
+  <small>Focus on <b>application logic</b> instead of maintaining infra; no more os upgrades, package management, security patches, orchestration tasks and load balancing</small>
 </section>
 
 
